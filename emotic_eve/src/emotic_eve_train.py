@@ -9,8 +9,8 @@ import tensorflow as tf
 from keras.layers import *
 from keras import backend as k
 from keras.optimizers import *
-from keras.models import Models
-# from keras applications import *
+from keras.models import Model
+from keras applications import *
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 
 # Application Parameters
