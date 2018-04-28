@@ -14,6 +14,8 @@ import scipy.io as sio
 from PIL import ImageFile
 from multiprocessing import Pool
 
+import util.eve
+
 # FIX: Truncated Image Error
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -24,12 +26,14 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 # TODO: Implement thread safe method for concurrency handling and data IO pipelining to improve data load procedure to mask behind GPU.
 
 # Emotion Categories
+'''
 cat_name = ['Affection', 'Anger', 'Annoyance', 'Anticipation', 'Aversion',
             'Confidence', 'Disapproval', 'Disconnection', 'Disquietment',
             'Doubt/Confusion', 'Embarrassment', 'Engagement', 'Esteem',
             'Excitement', 'Fatigue', 'Fear', 'Happiness', 'Pain', 'Peace',
             'Pleasure', 'Sadness', 'Sensitivity', 'Suffering', 'Surprise',
             'Sympathy', 'Yearning']
+'''
 
 class EMOTICData:
     def __init__(self, root_dir, annotations):
@@ -53,18 +57,13 @@ class EMOTICData:
         filename = self.annot.iloc[index, 0]
 
         # Extract Image
-        bb = self.annot.iloc[index, [1,2,3,4]].tolist()
+        # bb = self.annot.iloc[index, [1,2,3,4]].tolist()
         image = Image.open(open(filename, 'rb')).convert('RGB')
-        body = image.crop((int(bb[0]), int(bb[1]), int(bb[2]), int(bb[3])))
+        # body = image.crop((int(bb[0]), int(bb[1]), int(bb[2]), int(bb[3])))
 
-        # Extract Label
-        category = np.array(self.annot.iloc[index, range(5, 31)].astype(int).tolist())
-        vad = np.array(self.annot.iloc[index, range(31, 34)].astype(int).tolist()) / 10.0
-
-        # Perform Data Transformations
-        if self.transform:
-            image = self.transform(image)
-            body = self.transform(body)
+        # Extract and Encode Label
+        category = self.annot.iloc[index, range(5, 31)].astype(int).tolist()
+        
 
         return (image, body, category, vad)
 
@@ -72,18 +71,9 @@ if __name__ == '__main__':
     ROOT_DIR = '/storage/home/yjo5006/work/emotic_data/'
     ANOT_DIR = ROOT_DIR + '/emotic/train_annot.csv'
 
-    # Data Transformation and Normalization
-    # TODO: Define a better normalization scheme...
-    normalize = transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
-    transform = transforms.Compose([transforms.ToTensor(), normalize])
-
-    # Data Transformation and Normalization
-    # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],std=[0.229, 0.224, 0.225])
-    # transform = transforms.Compose([transforms.Resize((256, 256)), transforms.ToTensor()])
-
     # Load Training Data
     # start = time.time()
-    data = EMOTICData(ROOT_DIR+'emotic/', ANOT_DIR, transform=transform)
+    data = EMOTICData(ROOT_DIR+'emotic/', ANOT_DIR)
     print(data[325])
     # end = time.time()
     # print('Train - Total Time Elapsed: ' + str(end - start) + ' sec.')

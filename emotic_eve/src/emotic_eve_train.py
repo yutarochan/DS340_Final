@@ -10,8 +10,13 @@ from keras.layers import *
 from keras import backend as k
 from keras.optimizers import *
 from keras.models import Model
-from keras applications import *
+from keras.applications import *
 from keras.callbacks import ModelCheckpoint, EarlyStopping
+
+import util.data_csv
+
+# Original Codebase
+# https://www.kaggle.com/abnera/transfer-learning-keras-xception-cnn
 
 # Application Parameters
 SEED = 9892
@@ -30,10 +35,16 @@ MOMENTUM = 0.9                      # SGD Momentum to Avoid Local Minimum
 base_model = Xception(input_shape=(IM_WIDTH, IM_HEIGHT, 3), weights='imagenet', include_top=False)
 
 # Define Model Top Block
-x = model.output
+x = base_model.output
 x = GlobalAveragePooling2D()(x)
 pred = Dense(EVE_DIM)(x)
 
-# Build and Compile Model
+# Build Model
 model = Model(base_model.input, pred)
-print(model.summary())
+model.summary()
+
+# Freeze Base Model Layer - Train Top Block
+for layer in base_model.layers: layer.trainable = False
+
+# Compile Model
+model.compile(optimizer='adam', loss='mean_squared_error')
